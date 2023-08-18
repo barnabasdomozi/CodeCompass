@@ -4,7 +4,7 @@
 
 ```bash
 sudo apt install git wget cmake make libboost-all-dev \
-  g++-9 g++-10 gcc-10-plugin-dev \
+  g++ g++-9 g++-10 gcc-10-plugin-dev \
   default-jdk libssl-dev libgraphviz-dev libmagic-dev libgit2-dev exuberant-ctags doxygen \
   libldap2-dev libgtest-dev
 ```
