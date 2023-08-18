@@ -42,7 +42,7 @@ cmake --build build/ -j $(nproc)
 
 Install LLVM
 ```bash
-cmake --install llvm-project/build --prefix /usr/local  # or somewhere else
+cmake --install build/ --prefix /usr/local  # or somewhere else
 ```
 
 ### Compile ODB from source
