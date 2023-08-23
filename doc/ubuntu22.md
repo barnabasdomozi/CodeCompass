@@ -130,43 +130,8 @@ sudo apt install nodejs
 ```
 
 ## Build CodeCompass
-The previously self-compiled and installed dependencies are not automatically
-seen by CMake. Please set this environment before executing the build.
-
+Follow instructions on https://github.com/wbqpk3/CodeCompass/blob/master/doc/deps.md#build-codecompass <br>
+and use CMake flag:
 ```bash
-export GTEST_ROOT=<gtest_install_dir>
-
-export CMAKE_PREFIX_PATH=<thrift_install_dir>:$CMAKE_PREFIX_PATH
-export CMAKE_PREFIX_PATH=<odb_install_directory>:$CMAKE_PREFIX_PATH
-
-export PATH=<thrift_install_dir>/bin:$PATH
-export PATH=<odb_install_directory>/bin:$PATH
-```
-
-Use the following instructions to build CodeCompass with CMake.
-
-```bash
-# Obtain CodeCompass source code.
-git clone https://github.com/Ericsson/CodeCompass.git --origin upstream
-cd CodeCompass
-
-# Create build directory.
-mkdir Build
-cd Build
-
-# Run CMake
-cmake .. \
-  -DCMAKE_INSTALL_PREFIX=<CodeCompass_install_dir> \
-  -DDATABASE=sqlite \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_CXX_COMPILER=g++-9
-
-# To specify linker for building CodeCompass use
-#   -DCODECOMPASS_LINKER=<path_to_linker>
-
-# Build project.
-make -j $(nproc)
-
-# Copy files to install directory.
-make install
+-DCMAKE_CXX_COMPILER=g++-9
 ```
