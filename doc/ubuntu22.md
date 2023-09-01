@@ -20,7 +20,6 @@ sudo apt install postgresql-server-dev-14
 ```
 
 ### Compile LLVM project 10 from source
-> llvm-10-dev, clang-10, libclang-10-dev packages are required for the project, no longer in standard repositories
 
 Download source and extract it
 ```bash
@@ -46,8 +45,6 @@ cmake --install build/ --prefix /usr/local  # or somewhere else
 ```
 
 ### Compile ODB from source
-
-> ODB in standard repositories is old, need to compile a newer version
 
 Install build2
 
@@ -83,7 +80,6 @@ bpkg install --all --recursive
 > Note: now you may delete the Build2 toolchain installed in the <build2_install_dir> folder, if you do not need any longer.
 
 ### Compile Thrift 13.0 from source
-> Thrift 13.0 is required for the project, no longer in standard repositories
 
 ```bash
 # Download and uncompress Thrift:
@@ -121,7 +117,7 @@ make install -j $(nproc)
 ```
 
 ### Install Node.js
-Newer version of Node.js is required for the project, `nodejs` >= 14.
+Newer version of Node.js is required for the project, `nodejs` >= 18.
 
 ```bash
 curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh
