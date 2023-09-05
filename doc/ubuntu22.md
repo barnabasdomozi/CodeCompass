@@ -3,8 +3,9 @@
 ### Install packages from standard repositories
 
 ```bash
-sudo apt install git wget cmake make libboost-all-dev \
-  g++ g++-9 g++-10 gcc-10-plugin-dev \
+sudo apt install git curl wget cmake make libboost-all-dev \
+  g++ g++-9 gcc-11-plugin-dev \
+  llvm-11-dev clang-11 libclang-11-dev \
   default-jdk libssl-dev libgraphviz-dev libmagic-dev libgit2-dev exuberant-ctags doxygen \
   libldap2-dev libgtest-dev
 ```
