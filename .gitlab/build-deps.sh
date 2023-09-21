@@ -35,14 +35,15 @@ export CC=$DEPS_INSTALL_BUILD_DIR/gcc-install/bin/gcc
 # CMake #
 #########
 
-cd $PACKAGES_DIR
-wget --no-verbose --no-clobber https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0-Linux-x86_64.tar.gz
-tar -xf cmake-3.19.0-Linux-x86_64.tar.gz -C $DEPS_INSTALL_BUILD_DIR
-rm -rf cmake-3.19.0-Linux-x86_64.tar.gz
+if [ ! -f $DEPS_INSTALL_BUILD_DIR/cmake-install/bin/cmake ]; then
+  cd $PACKAGES_DIR
+  wget --no-verbose --no-clobber https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0-Linux-x86_64.tar.gz
+  tar -xf cmake-3.19.0-Linux-x86_64.tar.gz -C $DEPS_INSTALL_BUILD_DIR
+  rm -rf cmake-3.19.0-Linux-x86_64.tar.gz
 
-cd $DEPS_INSTALL_BUILD_DIR
-mv cmake-3.19.0-Linux-x86_64 cmake-install
-
+  cd $DEPS_INSTALL_BUILD_DIR
+  mv cmake-3.19.0-Linux-x86_64 cmake-install
+fi
 export PATH=$DEPS_INSTALL_BUILD_DIR/cmake-install/bin:$PATH
 
 ######
@@ -116,9 +117,9 @@ rm -f $PACKAGES_DIR/libcutl-1.10.0.tar.gz
 ##############
 
 cd $PACKAGES_DIR
-wget --no-verbose --no-clobber https://ftp.postgresql.org/pub/source/v10.4/postgresql-10.4.tar.gz
-tar -xf postgresql-10.4.tar.gz
-cd postgresql-10.4
+wget --no-verbose --no-clobber https://ftp.postgresql.org/pub/source/v12.16/postgresql-12.16.tar.gz
+tar -xf postgresql-12.16.tar.gz
+cd postgresql-12.16
 
 ./configure \
   --quiet \
@@ -127,7 +128,7 @@ cd postgresql-10.4
   --without-zlib
 
 make install --quiet --jobs $(nproc)
-rm -f $PACKAGES_DIR/postgresql-10.4.tar.gz
+rm -f $PACKAGES_DIR/postgresql-12.16.tar.gz
 
 ###############
 # odb, libodb #
@@ -137,8 +138,8 @@ if [ ! -f $DEPS_INSTALL_RUNTIME_DIR/odb-install/bin/odb ]; then
   if [[ $ODB_VERSION == "2.5.0" ]]; then
     # build2
     cd $PACKAGES_DIR
-    wget --no-verbose --no-clobber https://download.build2.org/0.14.0/build2-install-0.14.0.sh
-    sh build2-install-0.14.0.sh --yes --trust yes --jobs $(nproc) $PACKAGES_DIR/build2-install
+    wget --no-verbose --no-clobber https://download.build2.org/0.16.0/build2-install-0.16.0.sh
+    sh build2-install-0.16.0.sh --yes --trust yes --jobs $(nproc) $PACKAGES_DIR/build2-install
     export PATH=$PACKAGES_DIR/build2-install/bin:$PATH
 
     # odb, libodb
@@ -160,7 +161,8 @@ if [ ! -f $DEPS_INSTALL_RUNTIME_DIR/odb-install/bin/odb ]; then
     bpkg build libodb-pgsql --yes --quiet --jobs $(nproc)
     bpkg install --all --recursive --quiet --jobs $(nproc)
 
-    rm -f $PACKAGES_DIR/build2-toolchain-0.14.0.tar.xz
+    rm -f $PACKAGES_DIR/build2-toolchain-0.16.0.tar.xz
+    rm -f $PACKAGES_DIR/build2-install-0.16.0.sh
   elif [[ $ODB_VERSION == "2.4.0" ]]; then
     # odb
     cd $PACKAGES_DIR
@@ -255,9 +257,9 @@ export LD_LIBRARY_PATH=$DEPS_INSTALL_RUNTIME_DIR/python-install/lib:$LD_LIBRARY_
 
 if [ ! -f $DEPS_INSTALL_RUNTIME_DIR/llvm-install/bin/clang ]; then
   cd $PACKAGES_DIR
-  wget --no-verbose --no-clobber https://github.com/llvm/llvm-project/archive/llvmorg-10.0.1.tar.gz
-  tar -xf llvmorg-10.0.1.tar.gz
-  mv llvm-project-llvmorg-10.0.1 llvm-project
+  wget --no-verbose --no-clobber https://github.com/llvm/llvm-project/archive/llvmorg-11.1.0.tar.gz
+  tar -xf llvmorg-11.1.0.tar.gz
+  mv llvm-project-llvmorg-11.1.0 llvm-project
   mkdir llvm-project/build
   cd llvm-project/build
 
@@ -269,7 +271,7 @@ if [ ! -f $DEPS_INSTALL_RUNTIME_DIR/llvm-install/bin/clang ]; then
     -DLLVM_ENABLE_RTTI=ON
 
   make install --quiet --jobs $(nproc)
-  rm -f $PACKAGES_DIR/llvmorg-10.0.1.tar.gz
+  rm -f $PACKAGES_DIR/llvmorg-11.1.0.tar.gz
 else
   echo "Found LLVM/Clang in cache."
 fi
@@ -329,7 +331,7 @@ fi
 ##########
 
 cd $PACKAGES_DIR
-wget --no-verbose --no-clobber http://xenia.sote.hu/ftp/mirrors/www.apache.org/thrift/0.13.0/thrift-0.13.0.tar.gz
+wget --no-verbose --no-clobber http://archive.apache.org/dist/thrift/0.13.0/thrift-0.13.0.tar.gz
 tar -xf thrift-0.13.0.tar.gz
 cd thrift-0.13.0
 
@@ -378,12 +380,12 @@ rm -f $PACKAGES_DIR/release-1.10.0.tar.gz
 #######
 
 cd $PACKAGES_DIR
-wget --no-verbose --no-clobber https://nodejs.org/dist/v14.15.0/node-v14.15.0-linux-x64.tar.xz
-tar -xf node-v14.15.0-linux-x64.tar.xz -C $DEPS_INSTALL_RUNTIME_DIR
-rm -f node-v14.15.0-linux-x64.tar.xz
+wget --no-verbose --no-clobber https://nodejs.org/dist/v16.20.2/node-v16.20.2-linux-x64.tar.xz
+tar -xf node-v16.20.2-linux-x64.tar.xz -C $DEPS_INSTALL_RUNTIME_DIR
+rm -f node-v16.20.2-linux-x64.tar.xz
 
 cd $DEPS_INSTALL_RUNTIME_DIR
-mv node-v14.15.0-linux-x64 node-install
+mv node-v16.20.2-linux-x64 node-install
 export PATH=$DEPS_INSTALL_RUNTIME_DIR/node-install/bin:$PATH
 
 ############
