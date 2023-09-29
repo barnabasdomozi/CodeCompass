@@ -415,6 +415,7 @@ void PythonServiceHandler::getReferences(
             {
                 FuncResult functions = _db->query<model::PythonFunction>(
                         FuncQuery::astNodeId == node.id);
+
                 model::PythonFunction function = *functions.begin();
 
                 for (auto var : function.parameters){
@@ -429,6 +430,12 @@ void PythonServiceHandler::getReferences(
             {
                 FuncResult functions = _db->query<model::PythonFunction>(
                         FuncQuery::astNodeId == node.id);
+
+                if(functions.size() == 0)
+                {
+                    break;
+                }
+
                 model::PythonFunction function = *functions.begin();
 
                 for (auto var : function.locals){
@@ -603,6 +610,7 @@ std::int32_t PythonServiceHandler::getReferenceCount(
     const core::AstNodeId& astNodeId_,
     const std::int32_t referenceId_)
 {
+
     model::PythonAstNode node = queryPythonAstNode(astNodeId_);
 
     return _transaction([&, this]() -> std::int32_t {
@@ -656,9 +664,15 @@ std::int32_t PythonServiceHandler::getReferenceCount(
                         FuncQuery::qualifiedName == node.qualifiedName).count;
 
             case LOCAL_VAR:
+            {
+                if(node.astType == cc::model::PythonAstNode::AstType::Usage)
+                {
+                    return 0;
+                }
+
                 return _db->query_value<model::PythonFunctionLocalCount>(
                         FuncQuery::qualifiedName == node.qualifiedName).count;
-
+            }
             case RETURN_TYPE:
             {
                 FuncResult functions = _db->query<cc::model::PythonFunction>(
