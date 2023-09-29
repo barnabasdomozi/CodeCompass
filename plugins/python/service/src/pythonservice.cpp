@@ -416,6 +416,11 @@ void PythonServiceHandler::getReferences(
                 FuncResult functions = _db->query<model::PythonFunction>(
                         FuncQuery::astNodeId == node.id);
 
+                if(functions.size() == 0)
+                {
+                    break;
+                }
+
                 model::PythonFunction function = *functions.begin();
 
                 for (auto var : function.parameters){
