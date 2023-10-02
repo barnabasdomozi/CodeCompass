@@ -322,6 +322,7 @@ void Persistence::persistFunction(boost::python::object pyFunction)
         function->name = boost::python::extract<std::string>(name);
         function->qualifiedName = boost::python::extract<std::string>(qualifiedName);
         function->visibility = boost::python::extract<std::string>(visibility);
+        function->astType = funcAstNode->astType;
 
         function->id = model::createIdentifier(*function);
 

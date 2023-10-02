@@ -19,6 +19,8 @@ struct PythonFunction : PythonEntity
     #pragma db on_delete(cascade)
     std::vector<odb::lazy_shared_ptr<PythonVariable>> locals;
 
+    model::PythonAstNode::AstType astType;
+
     std::string toString() const
     {
         return std::string("PythonFunction")

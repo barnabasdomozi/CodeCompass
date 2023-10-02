@@ -413,12 +413,12 @@ void PythonServiceHandler::getReferences(
 
             case PARAMETER:
             {
-                FuncResult functions = _db->query<model::PythonFunction>(
-                        FuncQuery::astNodeId == node.id);
-
-                if(functions.size() == 0)
+                FuncResult functions;
+                if(node.astType == model::PythonAstNode::AstType::Declaration)
                 {
-                    break;
+                    functions = _db->query<model::PythonFunction>(FuncQuery::astNodeId == node.id);
+                }else{
+                    functions = _db->query<model::PythonFunction>(FuncQuery::qualifiedName == node.qualifiedName && FuncQuery::astType == model::PythonAstNode::AstType::Declaration);
                 }
 
                 model::PythonFunction function = *functions.begin();
