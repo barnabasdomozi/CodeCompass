@@ -3,6 +3,7 @@ import { AccordionLabel } from 'enums/accordion-enum';
 import { ThemeContext } from 'global-context/theme-context';
 import React, { useContext, useRef, useState, useEffect, MouseEvent } from 'react';
 import { getCppAstNodeInfoByPosition } from 'service/cpp-service';
+import { getPythonAstNodeInfoByPosition } from 'service/python-service';
 import { FileInfo, Position, Range } from '@thrift-generated';
 import { cpp } from '@codemirror/lang-cpp';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
@@ -106,10 +107,18 @@ export const CodeMirrorEditor = (): JSX.Element => {
     const line = view.state.doc.lineAt(head);
     const column = view.state.selection.ranges[0].head - line.from;
 
-    const astNodeInfo =
-      fileInfo?.type === 'Unknown'
-        ? null
-        : await getCppAstNodeInfoByPosition(fileInfo?.id as string, line.number, column);
+    const getAstNodeInfo = async () => {
+      switch(fileInfo?.type)
+      {
+        case "CPP":
+          return await getCppAstNodeInfoByPosition(fileInfo?.id as string, line.number, column);
+        case "PY":
+          return await getPythonAstNodeInfoByPosition(fileInfo?.id as string, line.number, column);
+      }
+    };
+
+    const astNodeInfo = await getAstNodeInfo();
+
     if (astNodeInfo) {
       dispatchSelection(astNodeInfo?.range?.range as Range);
       router.push({
