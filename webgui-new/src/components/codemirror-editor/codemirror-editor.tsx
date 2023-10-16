@@ -4,6 +4,7 @@ import { ThemeContext } from 'global-context/theme-context';
 import React, { useContext, useRef, useState, useEffect, MouseEvent } from 'react';
 import { getCppAstNodeInfoByPosition, getCppReferenceTypes, getCppReferences } from 'service/cpp-service';
 import { AstNodeInfo, FileInfo, Position, Range } from '@thrift-generated';
+import { getPythonAstNodeInfoByPosition } from 'service/python-service';
 import { cpp } from '@codemirror/lang-cpp';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import { EditorContextMenu } from 'components/editor-context-menu/editor-context-menu';
@@ -171,10 +172,18 @@ export const CodeMirrorEditor = (): JSX.Element => {
     const line = view.state.doc.lineAt(head);
     const column = view.state.selection.ranges[0].head - line.from;
 
-    const astNodeInfo =
-      fileInfo?.type === 'Unknown'
-        ? null
-        : await getCppAstNodeInfoByPosition(fileInfo?.id as string, line.number, column);
+    const getAstNodeInfo = async () => {
+      switch(fileInfo?.type)
+      {
+        case "CPP":
+          return await getCppAstNodeInfoByPosition(fileInfo?.id as string, line.number, column);
+        case "PY":
+          return await getPythonAstNodeInfoByPosition(fileInfo?.id as string, line.number, column);
+      }
+    };
+
+    const astNodeInfo = await getAstNodeInfo();
+
     if (astNodeInfo) {
       sendGAEvent({
         event_action: 'click_on_word',
