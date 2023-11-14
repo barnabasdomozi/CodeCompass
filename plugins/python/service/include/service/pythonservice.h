@@ -5,7 +5,7 @@
 #include <vector>
 
 #include <boost/program_options/variables_map.hpp>
-
+#include <boost/python.hpp>
 #include <odb/database.hxx>
 #include <util/odbtransaction.h>
 #include <webserver/servercontext.h>
@@ -18,6 +18,8 @@ namespace service
 {
 namespace language
 {
+
+namespace python = boost::python;
 
 class PythonServiceHandler : virtual public LanguageServiceIf
 {
@@ -121,6 +123,8 @@ public:
     const core::FileRange& range_) override;
 
 private:
+  python::object m_py_module;
+
   enum ReferenceType
   {
     DEFINITION, /*!< By this option the definition(s) of the AST node can be

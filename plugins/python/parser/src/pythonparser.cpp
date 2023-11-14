@@ -18,7 +18,7 @@ PythonParser::PythonParser(ParserContext& ctx_): AbstractParser(ctx_)
 bool PythonParser::accept(const std::string& path_)
 {
   std::string ext = boost::filesystem::extension(path_);
-  return ext == ".dummy";
+  return ext == ".py";
 }
 
 bool PythonParser::parse()
@@ -27,7 +27,7 @@ bool PythonParser::parse()
   {
     if(accept(path))
     {
-      LOG(info) << "DummyParser parse path: " << path;
+      LOG(info) << "PythonParser parse path: " << path;
     }
   }
   return true;
@@ -44,10 +44,6 @@ extern "C"
   boost::program_options::options_description getOptions()
   {
     boost::program_options::options_description description("Python Plugin");
-
-    description.add_options()
-        ("dummy-arg", po::value<std::string>()->default_value("Dummy arg"),
-          "This argument will be used by the dummy parser.");
 
     return description;
   }

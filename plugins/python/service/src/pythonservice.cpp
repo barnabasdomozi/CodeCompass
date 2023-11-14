@@ -2,6 +2,12 @@
 #include <util/logutil.h>
 #include <boost/python.hpp>
 #include <string>
+#include <odb/query.hxx>
+#include <odb/database.hxx>
+#include <model/file.h>
+#include <model/file-odb.hxx>
+#include <util/dbutil.h>
+#include <util/odbtransaction.h>
 
 namespace cc
 {
@@ -10,12 +16,28 @@ namespace service
 namespace language
 {
 
+namespace python = boost::python;
+
 PythonServiceHandler::PythonServiceHandler(
   std::shared_ptr<odb::database> db_,
   std::shared_ptr<std::string> /*datadir_*/,
   const cc::webserver::ServerContext& context_)
-    : _db(db_), _transaction(db_), _context(context_) {
+    : _db(db_), _transaction(db_), _context(context_) 
+    {
+        // Init Python Interpreter
+        std::string py_service_dir = _context.compassRoot + "/lib/serviceplugin/pyservice/";
+        LOG(info) << "py_service_dir: " << py_service_dir;
+        setenv("PYTHONPATH", py_service_dir.c_str(), 1);
+        
+        Py_Initialize();
 
+        // Init PyService module
+        try {
+          m_py_module = python::import("service");
+        }catch (const python::error_already_set&)
+        {
+          PyErr_Print();
+        }
     }
 
 void PythonServiceHandler::getFileTypes(
@@ -25,25 +47,6 @@ void PythonServiceHandler::getFileTypes(
   return_.push_back("PY");
   return_.push_back("Dir");
 
-    std::string py_service_dir = _context.compassRoot + "/lib/serviceplugin/pyservice/";
-    LOG(info) << "py_service_dir: " << py_service_dir;
-    setenv("PYTHONPATH", py_service_dir.c_str(), 1);
-
-    Py_Initialize();
-    
-    namespace python = boost::python;
-    try
-    {
-      python::object py_module = python::import("test");
-
-      py_module.attr("greet")();
-    }
-    catch (const python::error_already_set&)
-    {
-      PyErr_Print();
-    }
-
-
   return;
 }
 
@@ -52,7 +55,7 @@ void PythonServiceHandler::getAstNodeInfo(
   const core::AstNodeId& astNodeId_) 
 {
   LOG(info) << "[PYSERVICE] " << __func__;
-
+  LOG(info) << "params astNodeId_: " << astNodeId_;
   return;
 }
 
@@ -61,6 +64,34 @@ void PythonServiceHandler::getAstNodeInfoByPosition(
   const core::FilePosition& fpos_) 
 {
 LOG(info) << "[PYSERVICE] " << __func__;
+LOG(info) << "params fileId: " << std::stoull(fpos_.file);
+
+_transaction([&, this](){
+    model::File f;
+    const service::core::FileId fileId = fpos_.file;
+
+    if (!_db->find(std::stoull(fileId), f))
+    {
+      // TODO exception
+      return;
+    }
+
+    LOG(info) << "path: " << f.path;
+
+    // PyService
+    try
+    {
+      python::object node = m_py_module.attr("getAstNodeInfoByPosition")(fpos_.file, f.path, fpos_.pos.line, fpos_.pos.column);
+      return_.id = python::extract<std::string>(node["id"]);
+      return_.astNodeValue = python::extract<std::string>(node["value"]);
+      return_.symbolType = python::extract<std::string>(node["type"]);
+    }
+    catch (const python::error_already_set&)
+    {
+      PyErr_Print();
+    }
+  });
+
   return;
 }
 
@@ -68,7 +99,8 @@ void PythonServiceHandler::getSourceText(
   std::string& return_,
   const core::AstNodeId& astNodeId_) 
 {
-LOG(info) << "[PYSERVICE] " << __func__;
+  LOG(info) << "[PYSERVICE] " << __func__;
+  LOG(info) << "params astNodeId_: " << astNodeId_;
   return;
 }
 
@@ -77,6 +109,7 @@ void PythonServiceHandler::getDocumentation(
   const core::AstNodeId& astNodeId_) 
 {
 LOG(info) << "[PYSERVICE] " << __func__;
+  LOG(info) << "params astNodeId_: " << astNodeId_;
   return;
 }
 
@@ -85,6 +118,7 @@ void PythonServiceHandler::getProperties(
   const core::AstNodeId& astNodeId_) 
 {
 LOG(info) << "[PYSERVICE] " << __func__;
+LOG(info) << "params astNodeId_: " << astNodeId_;
   return;
 }
 
@@ -93,6 +127,7 @@ void PythonServiceHandler::getDiagramTypes(
   const core::AstNodeId& astNodeId_) 
 {
 LOG(info) << "[PYSERVICE] " << __func__;
+LOG(info) << "params astNodeId_: " << astNodeId_;
   return;
 }
 
@@ -102,6 +137,7 @@ void PythonServiceHandler::getDiagram(
   const std::int32_t diagramId_) 
 {
 LOG(info) << "[PYSERVICE] " << __func__;
+LOG(info) << "params astNodeId_: " << astNodeId_;
   return;
 }
 
@@ -140,11 +176,11 @@ LOG(info) << "[PYSERVICE] " << __func__;
 
 void PythonServiceHandler::getReferenceTypes(
   std::map<std::string, std::int32_t>& return_,
-  const core::AstNodeId& astNodeId) 
+  const core::AstNodeId& astNodeId_) 
 {
 LOG(info) << "[PYSERVICE] " << __func__;
+LOG(info) << "params astNodeId_: " << astNodeId_;
   return_["Definition"]                = DEFINITION;
-  return_["Declaration"]               = DECLARATION;
   return_["Usage"]                     = USAGE;
   return;
 }
@@ -156,7 +192,15 @@ void PythonServiceHandler::getReferences(
   const std::vector<std::string>& tags_) 
 {
 LOG(info) << "[PYSERVICE] " << __func__;
-  return;
+LOG(info) << "params astNodeId_: " << astNodeId_;
+  try
+  {
+    m_py_module.attr("getReferences")(astNodeId_, referenceId_);
+  }
+  catch (const python::error_already_set&)
+  {
+    PyErr_Print();
+  }
 }
 
 std::int32_t PythonServiceHandler::getReferenceCount(
@@ -164,7 +208,17 @@ std::int32_t PythonServiceHandler::getReferenceCount(
   const std::int32_t referenceId_) 
 {
 LOG(info) << "[PYSERVICE] " << __func__;
-  return 42;
+LOG(info) << "params astNodeId_: " << astNodeId_;
+  try
+  {
+    int c = python::extract<int>(m_py_module.attr("getReferenceCount")(astNodeId_, referenceId_));
+    return c;
+  }
+  catch (const python::error_already_set&)
+  {
+    PyErr_Print();
+  }
+  return 0;
 }
 
 void PythonServiceHandler::getReferencesInFile(
@@ -175,6 +229,7 @@ void PythonServiceHandler::getReferencesInFile(
   const std::vector<std::string>& tags_) 
 {
 LOG(info) << "[PYSERVICE] " << __func__;
+LOG(info) << "params astNodeId_: " << astNodeId_;
   return;
 }
 
