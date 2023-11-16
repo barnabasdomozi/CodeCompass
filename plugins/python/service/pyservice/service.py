@@ -69,8 +69,8 @@ def getReferences(id, refId):
     if refId == 0:
         print("getReferences Definitions")
         for x in list(filter(lambda x : x.is_definition() == True, name.refs)):
-            print(x, "line:", x.line, "column:", x.column)
+            print(x, "path:", x.module_path, "line:", x.line, "column:", x.column)
     elif refId == 2:
         print("getReferences Usage")
         for x in list(filter(lambda x : x.is_definition() == False, name.refs)):
-            print(x, "line:", x.line, "column:", x.column)
+            print(x, "path:", x.module_path, "line:", x.line, "column:", x.column)
