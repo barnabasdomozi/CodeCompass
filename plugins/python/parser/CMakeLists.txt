@@ -1,11 +1,14 @@
 include_directories(
   include
-  ${PROJECT_SOURCE_DIR}/model/include
-  ${PROJECT_SOURCE_DIR}/util/include
-  ${PROJECT_SOURCE_DIR}/parser/include)
+  ${CMAKE_SOURCE_DIR}/parser/include
+  ${CMAKE_SOURCE_DIR}/util/include
+  ${CMAKE_SOURCE_DIR}/model/include)
 
 add_library(pythonparser SHARED
   src/pythonparser.cpp)
+
+target_link_libraries(pythonparser
+  model)
 
 target_compile_options(pythonparser PUBLIC -Wno-unknown-pragmas)
 

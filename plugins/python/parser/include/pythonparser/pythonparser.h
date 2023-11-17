@@ -3,6 +3,8 @@
 
 #include <parser/abstractparser.h>
 #include <parser/parsercontext.h>
+#include <parser/sourcemanager.h>
+#include <util/parserutil.h>
 
 namespace cc
 {
