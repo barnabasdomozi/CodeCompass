@@ -81,7 +81,7 @@ _transaction([&, this](){
     // PyService
     try
     {
-      python::object node = m_py_module.attr("getAstNodeInfoByPosition")(fpos_.file, f.path, fpos_.pos.line, fpos_.pos.column);
+      python::object node = m_py_module.attr("getAstNodeInfoByPosition")(f.path, fpos_.pos.line, fpos_.pos.column);
       return_.id = python::extract<std::string>(node["id"]);
       return_.astNodeValue = python::extract<std::string>(node["value"]);
       return_.symbolType = python::extract<std::string>(node["type"]);
@@ -195,7 +195,19 @@ LOG(info) << "[PYSERVICE] " << __func__;
 LOG(info) << "params astNodeId_: " << astNodeId_;
   try
   {
-    m_py_module.attr("getReferences")(astNodeId_, referenceId_);
+    python::object refs = m_py_module.attr("getReferences")(astNodeId_, referenceId_);
+    for (int i = 0; i < python::len(refs); i++)
+    {
+      python::object node = refs[i];
+      AstNodeInfo nodeInfo;
+      nodeInfo.id = python::extract<std::string>(node["id"]);
+      nodeInfo.astNodeValue = python::extract<std::string>(node["value"]);
+      nodeInfo.symbolType = python::extract<std::string>(node["type"]);
+      nodeInfo.range.file = python::extract<std::string>(node["file_id"]);
+      nodeInfo.range.range.startpos.line = python::extract<int>(node["start_line"]);
+      nodeInfo.range.range.startpos.column = python::extract<int>(node["start_column"]);
+      return_.push_back(nodeInfo);
+    }
   }
   catch (const python::error_already_set&)
   {

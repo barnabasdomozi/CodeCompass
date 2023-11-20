@@ -14,7 +14,40 @@ def loadScript(file_path):
         scripts[file_path] = script
         return script
 
-#def loadName()
+def loadName(x):
+    file_path = str(x.module_path)
+    start_column = x.get_definition_start_position()[1]
+    end_column = x.get_definition_end_position()[1]
+
+    s = f"{file_path}|{x.line}|{start_column}|{end_column}".encode("utf-8")
+    id = str(sha1(s).hexdigest())
+
+    if id not in names:
+        names[id] = x
+        names[id].file_id = str(fnvHash(file_path))
+
+    return id
+
+def findRefs(id):
+    if hasattr(names[id], 'refs'):
+        return
+    
+    script = loadScript(str(names[id].module_path))
+    name_refs = script.get_references(names[id].line, names[id].column)
+    names[id].refs = list(map(lambda x : loadName(x), name_refs))
+    names[id].defs = list(filter(lambda i : names[i].is_definition() == True, names[id].refs))
+    names[id].uses = list(filter(lambda i : names[i].is_definition() == False, names[id].refs))
+
+
+def fnvHash(str):
+  hash = 14695981039346656037
+
+  for c in str:
+    hash ^= ord(c)
+    hash *= 1099511628211
+
+  # see: https://stackoverflow.com/questions/20766813/how-to-convert-signed-to-unsigned-integer-in-python
+  return hash & 0xffffffffffffffff
 
 def getAstNodeInfo(id):
     nodeInfo = {}
@@ -24,10 +57,13 @@ def getAstNodeInfo(id):
         nodeInfo["id"] = id
         nodeInfo["value"] = x.get_line_code()
         nodeInfo["type"] = x.type
+        nodeInfo["file_id"] = x.file_id
+        nodeInfo["start_line"] = x.line
+        nodeInfo["start_column"] = x.get_definition_start_position()[1]
 
     return nodeInfo
 
-def getAstNodeInfoByPosition(file_id, file_path, line, column):
+def getAstNodeInfoByPosition(file_path, line, column):
 
     script = loadScript(file_path)
     column = column - 1
@@ -37,26 +73,20 @@ def getAstNodeInfoByPosition(file_id, file_path, line, column):
         end_column = x.get_definition_end_position()[1]
 
         if x.line == line and column >= start_column and column <= end_column:
-            s = f"{file_path}|{line}|{start_column}|{end_column}".encode("utf-8")
-            id = str(sha1(s).hexdigest())
-
-            if id not in names:
-                names[id] = x
-                names[id].fileId = file_id
-                names[id].refs = script.get_references(x.line, x.column)
-
-            return getAstNodeInfo(id)
+            return getAstNodeInfo(loadName(x))
             
 def getReferenceCount(id, refId):
-    name = names[id]
-
-    if name is None:
+    if id not in names:
         return 0
     
+    name = names[id]
+    
+    findRefs(id)
+    
     if refId == 0:
-        return len(list(filter(lambda x : x.is_definition() == True, name.refs)))
+        return len(name.defs)
     elif refId == 2:
-        return len(list(filter(lambda x : x.is_definition() == False, name.refs)))
+        return len(name.uses)
     
     return 0
 
@@ -66,11 +96,9 @@ def getReferences(id, refId):
     
     name = names[id]
 
+    findRefs(id)
+
     if refId == 0:
-        print("getReferences Definitions")
-        for x in list(filter(lambda x : x.is_definition() == True, name.refs)):
-            print(x, "path:", x.module_path, "line:", x.line, "column:", x.column)
+        return list(map(lambda i : getAstNodeInfo(i), name.defs))
     elif refId == 2:
-        print("getReferences Usage")
-        for x in list(filter(lambda x : x.is_definition() == False, name.refs)):
-            print(x, "path:", x.module_path, "line:", x.line, "column:", x.column)
+        return list(map(lambda i : getAstNodeInfo(i), name.uses))
