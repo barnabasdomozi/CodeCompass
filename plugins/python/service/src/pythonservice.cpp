@@ -204,8 +204,12 @@ LOG(info) << "params astNodeId_: " << astNodeId_;
       nodeInfo.astNodeValue = python::extract<std::string>(node["value"]);
       nodeInfo.symbolType = python::extract<std::string>(node["type"]);
       nodeInfo.range.file = python::extract<std::string>(node["file_id"]);
+
       nodeInfo.range.range.startpos.line = python::extract<int>(node["start_line"]);
       nodeInfo.range.range.startpos.column = python::extract<int>(node["start_column"]);
+
+      nodeInfo.range.range.endpos.line = python::extract<int>(node["end_line"]);
+      nodeInfo.range.range.endpos.column = python::extract<int>(node["end_column"]);
       return_.push_back(nodeInfo);
     }
   }

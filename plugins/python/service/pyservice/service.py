@@ -28,6 +28,10 @@ def loadName(x):
 
     return id
 
+def dump(obj):
+  for attr in dir(obj):
+    print("obj.%s = %r" % (attr, getattr(obj, attr)))
+
 def findRefs(id):
     if hasattr(names[id], 'refs'):
         return
@@ -35,9 +39,8 @@ def findRefs(id):
     script = loadScript(str(names[id].module_path))
     name_refs = script.get_references(names[id].line, names[id].column)
     names[id].refs = list(map(lambda x : loadName(x), name_refs))
-    names[id].defs = list(filter(lambda i : names[i].is_definition() == True, names[id].refs))
+    names[id].defs = list(map(lambda x : loadName(x), names[id].goto(follow_imports=True)))
     names[id].uses = list(filter(lambda i : names[i].is_definition() == False, names[id].refs))
-
 
 def fnvHash(str):
   hash = 14695981039346656037
@@ -58,8 +61,10 @@ def getAstNodeInfo(id):
         nodeInfo["value"] = x.get_line_code()
         nodeInfo["type"] = x.type
         nodeInfo["file_id"] = x.file_id
-        nodeInfo["start_line"] = x.line
-        nodeInfo["start_column"] = x.get_definition_start_position()[1]
+        nodeInfo["start_line"] = x.get_definition_start_position()[0]
+        nodeInfo["start_column"] = x.get_definition_start_position()[1] + 1
+        nodeInfo["end_line"] = x.get_definition_end_position()[0]
+        nodeInfo["end_column"] = x.get_definition_end_position()[1] + 1
 
     return nodeInfo
 
