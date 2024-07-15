@@ -5,6 +5,7 @@ import React, { useContext, useRef, useState, useEffect, MouseEvent } from 'reac
 import { createClient, getAstNodeInfoByPosition, getReferenceTypes, getReferences } from 'service/language-service';
 import { AstNodeInfo, FileInfo, Position, Range } from '@thrift-generated';
 import { cpp } from '@codemirror/lang-cpp';
+import { python } from '@codemirror/lang-python';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import { EditorContextMenu } from 'components/editor-context-menu/editor-context-menu';
 import { FileName } from 'components/file-name/file-name';
@@ -318,7 +319,7 @@ export const CodeMirrorEditor = (): JSX.Element => {
         </SC.GitBlameContainer>
         <ReactCodeMirror
           readOnly={true}
-          extensions={[cpp(), highlightExtension()]}
+          extensions={[(fileInfo?.type == "PY") ? python() : cpp(), highlightExtension()]}
           theme={theme === 'dark' ? githubDark : githubLight}
           basicSetup={{
             syntaxHighlighting: false,
