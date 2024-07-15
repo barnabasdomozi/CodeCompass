@@ -7,7 +7,6 @@ import { createCppClient } from 'service/cpp-service';
 import { createCppReparseClient } from 'service/cpp-reparse-service';
 import { createMetricsClient } from 'service/metrics-service';
 import { createGitClient } from 'service/git-service';
-import { createPythonClient } from 'service/python-service';
 import { createConfig } from 'service/config';
 import { SearchProps } from 'utils/types';
 import { TabName } from 'enums/tab-enum';
@@ -156,7 +155,6 @@ export const AppContextController = ({ children }: { children: React.ReactNode }
       createCppReparseClient(workspaceId);
       createMetricsClient(workspaceId);
       createGitClient(workspaceId);
-      createPythonClient(workspaceId);
 
       const initLabels = (await getLabels()) ?? new Map();
       setLabels(initLabels);

@@ -2,9 +2,8 @@ import ReactCodeMirror, { Decoration, EditorView, ReactCodeMirrorRef } from '@ui
 import { AccordionLabel } from 'enums/accordion-enum';
 import { ThemeContext } from 'global-context/theme-context';
 import React, { useContext, useRef, useState, useEffect, MouseEvent } from 'react';
-import { getCppAstNodeInfoByPosition, getCppReferenceTypes, getCppReferences } from 'service/cpp-service';
+import { createClient, getAstNodeInfoByPosition, getReferenceTypes, getReferences } from 'service/language-service';
 import { AstNodeInfo, FileInfo, Position, Range } from '@thrift-generated';
-import { getPythonAstNodeInfoByPosition } from 'service/python-service';
 import { cpp } from '@codemirror/lang-cpp';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import { EditorContextMenu } from 'components/editor-context-menu/editor-context-menu';
@@ -76,6 +75,8 @@ export const CodeMirrorEditor = (): JSX.Element => {
   useEffect(() => {
     if(!editorRef.current || !editorRef.current.view) return;
     setHighlightRanges([]);
+
+    createClient(appCtx.workspaceId, fileInfo?.type);
   }, [appCtx.workspaceId, fileInfo, fileContent])
 
   const createHighlightDecoration = (view: EditorView, highlightPosition: HighlightPosition, highlightColor: string) => {
@@ -102,9 +103,9 @@ export const CodeMirrorEditor = (): JSX.Element => {
   })}
 
   const updateHighlights = async (astNode : AstNodeInfo) => {
-    const refTypes = await getCppReferenceTypes(astNode.id as string)
+    const refTypes = await getReferenceTypes(astNode.id as string)
     if(visitedLastAstNode?.id !== astNode.id){
-      const allReferences = await getCppReferences(astNode.id as string, refTypes.get('Usage') as number, []);
+      const allReferences = await getReferences(astNode.id as string, refTypes.get('Usage') as number, []);
       const referencesInFile = allReferences.filter(ref => ref.range?.file === fileInfo?.id);
       setHighlightRanges(referencesInFile.map(nodeInfo => {
         const startpos = nodeInfo?.range?.range?.startpos as { line: number, column: number };
@@ -172,17 +173,7 @@ export const CodeMirrorEditor = (): JSX.Element => {
     const line = view.state.doc.lineAt(head);
     const column = view.state.selection.ranges[0].head - line.from;
 
-    const getAstNodeInfo = async () => {
-      switch(fileInfo?.type)
-      {
-        case "CPP":
-          return await getCppAstNodeInfoByPosition(fileInfo?.id as string, line.number, column);
-        case "PY":
-          return await getPythonAstNodeInfoByPosition(fileInfo?.id as string, line.number, column);
-      }
-    };
-
-    const astNodeInfo = await getAstNodeInfo();
+    const astNodeInfo = await getAstNodeInfoByPosition(fileInfo?.id as string, line.number, column);
 
     if (astNodeInfo) {
       sendGAEvent({

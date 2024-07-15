@@ -4,26 +4,38 @@ import { config } from './config';
 import { toast } from 'react-toastify';
 
 let client: LanguageService.Client | undefined;
-export const createPythonClient = (workspace: string) => {
-  if (!config) return;
+export const createClient = (workspace: string, fileType: string | undefined) => {
+  if (!config || !fileType) return;
+  
+  const service = () => 
+  {
+    switch(fileType)
+    {
+      case "CPP":
+        return "CppService";
+      case "PY":
+        return "PythonService";
+    }
+  };
+
   const connection = thrift.createXHRConnection(config.webserver_host, config.webserver_port, {
     transport: thrift.TBufferedTransport,
     protocol: thrift.TJSONProtocol,
     https: config.webserver_https,
-    path: `${config.webserver_path}/${workspace}/PythonService`,
+    path: `${config.webserver_path}/${workspace}/${service()}`,
   });
   client = thrift.createXHRClient(LanguageService, connection);
   return client;
 };
 
-export const getPythonFileTypes = async () => {
+export const getFileTypes = async () => {
   if (!client) {
     return [];
   }
   return await client.getFileTypes();
 };
 
-export const getPythonFileDiagramTypes = async (fileId: string) => {
+export const getFileDiagramTypes = async (fileId: string) => {
   let resultMap = new Map<string, number>();
   if (!client) {
     return resultMap;
@@ -37,7 +49,7 @@ export const getPythonFileDiagramTypes = async (fileId: string) => {
   return resultMap;
 };
 
-export const getPythonFileDiagram = async (fileId: string, diagramId: number) => {
+export const getFileDiagram = async (fileId: string, diagramId: number) => {
   if (!client) {
     return '';
   }
@@ -50,7 +62,7 @@ export const getPythonFileDiagram = async (fileId: string, diagramId: number) =>
   }
 };
 
-export const getPythonFileDiagramLegend = async (diagramId: number) => {
+export const getFileDiagramLegend = async (diagramId: number) => {
   if (!client) {
     return '';
   }
@@ -63,7 +75,7 @@ export const getPythonFileDiagramLegend = async (diagramId: number) => {
   }
 };
 
-export const getPythonDiagramTypes = async (astNodeId: string) => {
+export const getDiagramTypes = async (astNodeId: string) => {
   let resultMap = new Map<string, number>();
   if (!client) {
     return resultMap;
@@ -77,7 +89,7 @@ export const getPythonDiagramTypes = async (astNodeId: string) => {
   return resultMap;
 };
 
-export const getPythonDiagram = async (astNodeId: string, diagramId: number) => {
+export const getDiagram = async (astNodeId: string, diagramId: number) => {
   if (!client) {
     return '';
   }
@@ -90,7 +102,7 @@ export const getPythonDiagram = async (astNodeId: string, diagramId: number) => 
   }
 };
 
-export const getPythonDiagramLegend = async (diagramId: number) => {
+export const getDiagramLegend = async (diagramId: number) => {
   if (!client) {
     return '';
   }
@@ -103,7 +115,7 @@ export const getPythonDiagramLegend = async (diagramId: number) => {
   }
 };
 
-export const getPythonFileReferenceTypes = async (fileId: string) => {
+export const getFileReferenceTypes = async (fileId: string) => {
   let resultMap = new Map<string, number>();
   if (!client) {
     return resultMap;
@@ -117,7 +129,7 @@ export const getPythonFileReferenceTypes = async (fileId: string) => {
   return resultMap;
 };
 
-export const getPythonFileReferences = async (fileId: string, referenceId: number) => {
+export const getFileReferences = async (fileId: string, referenceId: number) => {
   if (!client) {
     return [];
   }
@@ -129,7 +141,7 @@ export const getPythonFileReferences = async (fileId: string, referenceId: numbe
   }
 };
 
-export const getPythonFileReferenceCount = async (fileId: string, referenceId: number) => {
+export const getFileReferenceCount = async (fileId: string, referenceId: number) => {
   if (!client) {
     return 0;
   }
@@ -141,7 +153,7 @@ export const getPythonFileReferenceCount = async (fileId: string, referenceId: n
   }
 };
 
-export const getPythonReferenceTypes = async (astNodeId: string) => {
+export const getReferenceTypes = async (astNodeId: string) => {
   let resultMap = new Map<string, number>();
   if (!client) {
     return resultMap;
@@ -155,7 +167,7 @@ export const getPythonReferenceTypes = async (astNodeId: string) => {
   return resultMap;
 };
 
-export const getPythonReferences = async (astNodeId: string, referenceId: number, tags: string[]) => {
+export const getReferences = async (astNodeId: string, referenceId: number, tags: string[]) => {
   if (!client) {
     return [];
   }
@@ -167,7 +179,7 @@ export const getPythonReferences = async (astNodeId: string, referenceId: number
   }
 };
 
-export const getPythonReferenceCount = async (astNodeId: string, referenceId: number) => {
+export const getReferenceCount = async (astNodeId: string, referenceId: number) => {
   if (!client) {
     return 0;
   }
@@ -179,7 +191,7 @@ export const getPythonReferenceCount = async (astNodeId: string, referenceId: nu
   }
 };
 
-export const getPythonReferencesInFile = async (
+export const getReferencesInFile = async (
   astNodeId: string,
   referenceId: number,
   fileId: string,
@@ -196,7 +208,7 @@ export const getPythonReferencesInFile = async (
   }
 };
 
-export const getPythonReferencesPage = async (
+export const getReferencesPage = async (
   astNodeId: string,
   referenceId: number,
   pageSize: number,
@@ -213,7 +225,7 @@ export const getPythonReferencesPage = async (
   }
 };
 
-export const getPythonSourceText = async (astNodeId: string) => {
+export const getSourceText = async (astNodeId: string) => {
   if (!client) {
     return '';
   }
@@ -225,7 +237,7 @@ export const getPythonSourceText = async (astNodeId: string) => {
   }
 };
 
-export const getPythonProperties = async (astNodeId: string) => {
+export const getProperties = async (astNodeId: string) => {
   let resultMap = new Map<string, string>();
   if (!client) {
     return resultMap;
@@ -239,7 +251,7 @@ export const getPythonProperties = async (astNodeId: string) => {
   return resultMap;
 };
 
-export const getPythonDocumentation = async (astNodeId: string) => {
+export const getDocumentation = async (astNodeId: string) => {
   if (!client) {
     return '';
   }
@@ -252,7 +264,7 @@ export const getPythonDocumentation = async (astNodeId: string) => {
   }
 };
 
-export const getPythonAstNodeInfo = async (astNodeId: string) => {
+export const getAstNodeInfo = async (astNodeId: string) => {
   if (!client) {
     return;
   }
@@ -264,7 +276,7 @@ export const getPythonAstNodeInfo = async (astNodeId: string) => {
   }
 };
 
-export const getPythonAstNodeInfoByPosition = async (fileId: string, line: number, column: number) => {
+export const getAstNodeInfoByPosition = async (fileId: string, line: number, column: number) => {
   if (!client) {
     return;
   }
