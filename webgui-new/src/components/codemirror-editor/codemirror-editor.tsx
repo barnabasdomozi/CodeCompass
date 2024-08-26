@@ -1,4 +1,4 @@
-import ReactCodeMirror, { Decoration, EditorView, ReactCodeMirrorRef } from '@uiw/react-codemirror';
+import ReactCodeMirror, { Decoration, EditorView, Extension, ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { AccordionLabel } from 'enums/accordion-enum';
 import { ThemeContext } from 'global-context/theme-context';
 import React, { useContext, useRef, useState, useEffect, MouseEvent } from 'react';
@@ -103,6 +103,19 @@ export const CodeMirrorEditor = (): JSX.Element => {
     return Decoration.set(decorations, true);
   })}
 
+  const languageExtension = (fileType?: string) =>
+  {
+    switch(fileType)
+    {
+      case "CPP":
+        return cpp();
+      case "PY":
+        return python();
+      default:
+        return null;
+    }
+  }
+
   const updateHighlights = async (astNode : AstNodeInfo) => {
     const refTypes = await getReferenceTypes(astNode.id as string)
     if(visitedLastAstNode?.id !== astNode.id){
@@ -174,7 +187,10 @@ export const CodeMirrorEditor = (): JSX.Element => {
     const line = view.state.doc.lineAt(head);
     const column = view.state.selection.ranges[0].head - line.from;
 
-    const astNodeInfo = await getAstNodeInfoByPosition(fileInfo?.id as string, line.number, column);
+    const astNodeInfo =
+      fileInfo?.type === 'Unknown'
+        ? null
+        : await getAstNodeInfoByPosition(fileInfo?.id as string, line.number, column);
 
     if (astNodeInfo) {
       sendGAEvent({
@@ -319,7 +335,7 @@ export const CodeMirrorEditor = (): JSX.Element => {
         </SC.GitBlameContainer>
         <ReactCodeMirror
           readOnly={true}
-          extensions={[(fileInfo?.type == "PY") ? python() : cpp(), highlightExtension()]}
+          extensions={[languageExtension(fileInfo?.type), highlightExtension()].filter(e => e) as Extension[]}
           theme={theme === 'dark' ? githubDark : githubLight}
           basicSetup={{
             syntaxHighlighting: false,
